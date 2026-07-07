@@ -307,7 +307,10 @@ combo_count = 0
 shake_frames = 0     
 fire_bolts = []      
 particles = []       
-gray_debris = []     
+gray_debris = [] 
+
+zombie_message = False
+zombie_message_start = 0   
 
 def create_enemy():
     angle = random.uniform(0, 2 * math.pi)
@@ -327,7 +330,12 @@ def create_enemy():
         "x": x, "y": y, "move_dir": move_dir,  
         "word_ja": word_data["ja"], "word_en": word_data["en"], "index": 0,
         "speed": random.uniform(0.5, 1.0) + (score // 1000) * 0.1,
-        "image": chosen_image, "rot_angle": rot_angle, "offset_ja": offset_ja, "offset_en": offset_en
+        "image": chosen_image, "rot_angle": rot_angle, "offset_ja": offset_ja, "offset_en": offset_en,
+        "miss": 0,
+        "zombie": False,
+        "zombie_start": 0,
+        "spawn_x": x,
+        "spawn_y": y,
     }
 
 enemies.append(create_enemy())
@@ -364,19 +372,43 @@ while running:
                     matched = True
                 else:
                     combo_count = 0
+                    
+                    if locked_enemy and not locked_enemy["zombie"]:
+
+                        locked_enemy["miss"] += 1
+
+                        if locked_enemy["miss"] >= 5:
+
+                            locked_enemy["zombie"] = True
+                            locked_enemy["zombie_start"] = pygame.time.get_ticks()
+
+                            zombie_message = True
+                            zombie_message_start = pygame.time.get_ticks()
             
             if locked_enemy and locked_enemy["index"] >= len(locked_enemy["word_en"]):
-                if snd_kill: snd_kill.play()
-                
-                particles.extend([Particle(locked_enemy["x"], locked_enemy["y"], random.choice([GRAY_INNER, GRAY_OUTER])) for _ in range(75)])
-                gray_debris.extend([GrayDebris(locked_enemy["x"], locked_enemy["y"]) for _ in range(15)])
-                
-                shake_frames = 15 
-                combo_count += 1
-                score += 100 * combo_count
+                if enemy["zombie"]:
+
+                    enemy["x"] = enemy["spawn_x"]
+                    enemy["y"] = enemy["spawn_y"]
+
+                    enemy["index"] = 0
+                    enemy["miss"] = 0
+
+                    locked_enemy = None
+
+                else:
                     
-                enemies.remove(locked_enemy)
-                locked_enemy = None
+                    if snd_kill: snd_kill.play()
+                    
+                    particles.extend([Particle(locked_enemy["x"], locked_enemy["y"], random.choice([GRAY_INNER, GRAY_OUTER])) for _ in range(75)])
+                    gray_debris.extend([GrayDebris(locked_enemy["x"], locked_enemy["y"]) for _ in range(15)])
+                    
+                    shake_frames = 15 
+                    combo_count += 1
+                    score += 100 * combo_count
+                        
+                    enemies.remove(locked_enemy)
+                    locked_enemy = None
                 
         elif event.type == pygame.KEYDOWN and game_state == "GAMEOVER":
             if event.key == pygame.K_SPACE:
@@ -417,6 +449,18 @@ while running:
                     game_state = "GAMEOVER"
                     pygame.mixer.music.stop()
                     if snd_gameover: snd_gameover.play()
+                    
+        now = pygame.time.get_ticks()
+
+        for enemy in enemies:
+
+            if enemy["zombie"]:
+
+                if now - enemy["zombie_start"] >= 10000:
+
+                    enemy["zombie"] = False
+                    enemy["miss"] = 0
+                    enemy["index"] = 0
 
     offset_x, offset_y = 0, 0
     if shake_frames > 0:
@@ -434,6 +478,12 @@ while running:
 
     for e in enemies:
         rotated_enemy_img = pygame.transform.rotate(e["image"], e["rot_angle"])
+        # ゾンビ中は敵を緑色にする
+    if enemy["zombie"]:
+        rotated_enemy_img = rotated_enemy_img.copy()
+        green = pygame.Surface(rotated_enemy_img.get_size(), pygame.SRCALPHA)
+        green.fill((0, 180, 0, 100))   # 緑色
+        rotated_enemy_img.blit(green, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
         new_rect = rotated_enemy_img.get_rect(center=(int(e["x"]), int(e["y"])))
         screen.blit(rotated_enemy_img, (new_rect.x + offset_x, new_rect.y + offset_y))
 
@@ -451,12 +501,47 @@ while running:
     if game_state == "PLAYING":
         screen.blit(font_ui.render(f"SCORE: {score}", True, UI_COLOR), (20, 20))
         screen.blit(font_ui.render(f"LIFE: {hp} / 5", True, UI_COLOR), (20, 60))
+        
+        # ゾンビタイマー表示
+        for enemy in enemies:
+            if enemy["zombie"]:
+
+                remain = max(
+                    0,
+                    10 - (pygame.time.get_ticks() - enemy["zombie_start"]) / 1000
+                )
+
+                txt = font_ui.render(
+                    f"ZOMBIE : {remain:.1f}s",
+                    True,
+                    (0, 255, 0)
+                )
+
+                screen.blit(txt, (20, 100))
+                break
+            
     elif game_state == "GAMEOVER":
         mask = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         mask.fill((10, 10, 20, 200)); screen.blit(mask, (0, 0))
         screen.blit(font_title.render("GAME OVER", True, (255, 65, 65)), (CENTER_X - 180, 200))
         screen.blit(font_ui.render(f"FINAL SCORE: {score}", True, UI_COLOR), (CENTER_X - 150, 300))
         screen.blit(font_ui.render("Press SPACE to Restart", True, (0, 255, 255)), (CENTER_X - 150, 380))
+
+    if zombie_message:
+
+        if pygame.time.get_ticks() - zombie_message_start < 1000:
+
+            text = font_title.render(
+                "☠ ZOMBIE TIME!!",
+                True,
+                (0, 255, 0)
+            )
+
+            rect = text.get_rect(center=(CENTER_X, CENTER_Y))
+            screen.blit(text, rect)
+
+        else:
+            zombie_message = False
 
     pygame.display.update()
     clock.tick(60)
