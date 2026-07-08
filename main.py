@@ -381,7 +381,6 @@ while running:
 
                             locked_enemy["zombie"] = True
                             locked_enemy["zombie_start"] = pygame.time.get_ticks()
-                            locked_enemy["index"] = 0
 
                             zombie_message = True
                             zombie_message_start = pygame.time.get_ticks()
