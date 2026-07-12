@@ -4,6 +4,7 @@ import sys
 import math
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 # ==========================================
 # 1. 初期設定 & オーディオ初期化
 # ==========================================
@@ -309,6 +310,11 @@ fire_bolts = []
 particles = []       
 gray_debris = []     
 
+base_enemy_speed = 0.5      # 敵の初期スピード（一定）
+speed_up_timer = 0          # スピード上昇用のタイマー
+SPEED_UP_INTERVAL = 600     # 600フレーム（60FPSで約10秒）ごとにスピードアップ
+SPEED_UP_AMOUNT = 0.05      # 1回のスピードアップ量
+
 def create_enemy():
     angle = random.uniform(0, 2 * math.pi)
     x = CENTER_X + SPAWN_RADIUS * math.cos(angle)
@@ -326,7 +332,7 @@ def create_enemy():
     return {
         "x": x, "y": y, "move_dir": move_dir,  
         "word_ja": word_data["ja"], "word_en": word_data["en"], "index": 0,
-        "speed": random.uniform(0.5, 1.0) + (score // 1000) * 0.1,
+        "speed": base_enemy_speed,  # 一定スピードを設定
         "image": chosen_image, "rot_angle": rot_angle, "offset_ja": offset_ja, "offset_en": offset_en
     }
 
@@ -383,6 +389,11 @@ while running:
                 enemies.clear(); fire_bolts.clear(); particles.clear(); gray_debris.clear()
                 locked_enemy = None
                 score = 0; hp = 5; spawn_rate = 180; spawn_timer = 0; combo_count = 0
+                
+                # スピード関連のリセット
+                base_enemy_speed = 0.5
+                speed_up_timer = 0
+                
                 enemies.append(create_enemy())
                 game_state = "PLAYING"
                 play_bgm("bgm.mp3")
@@ -393,6 +404,12 @@ while running:
             enemies.append(create_enemy())
             spawn_timer = 0
             spawn_rate = max(70, 180 - (score // 1000) * 15)
+
+        # 時間経過によるスピードアップ処理
+        speed_up_timer += 1
+        if speed_up_timer >= SPEED_UP_INTERVAL:
+            base_enemy_speed += SPEED_UP_AMOUNT
+            speed_up_timer = 0
 
         bg_frame_count += 1
 
