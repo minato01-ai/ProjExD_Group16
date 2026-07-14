@@ -75,6 +75,7 @@ def load_img(filename, w, h, fallback_color_idx):
 # 🎵 サウンドファイルの読み込み & 音量調整
 # ==========================================
 def load_sound(filename):
+    # ex5フォルダから見た「ゲーム'」フォルダ内のパスに修正
     actual_path = os.path.join("ゲーム", filename)
     if os.path.exists(actual_path):
         try:
@@ -137,6 +138,17 @@ ENEMY_TYPES = [
     ],
     [
         {"ja": "しびれる", "en": "SIBIRERU"},{"ja": "あこがれる", "en": "AKOGARERU"},
+        {"ja": "くろいせいし", "en": "KUROISEISI"},{"ja": "あります", "en": "ARIMASU"},
+        {"ja": "いやなよかん", "en": "IYANAYOKAN"},{"ja": "ふつうのぱんち", "en": "HUTUUNOPANTI"},
+        {"ja": "れんぞく", "en": "RENZOKU"},{"ja": "まじなぐり", "en": "MAZINAGURI"},
+        {"ja": "むきゅう", "en": "MUKYUU"},{"ja": "ぶいあいぴー", "en": "BUIAIPII"},
+        {"ja": "つなひき", "en": "TUNAHIKI"},{"ja": "びーだま", "en": "BIIDAMA"},
+        {"ja": "がらすのはし", "en": "GARASUNOHASI"},{"ja": "ごーるど", "en": "GOORUDO"},
+        {"ja": "すたーぷらちな", "en": "SUTAAPURATINA"},{"ja": "ざわーるど", "en": "ZAWAARUDO"},
+        {"ja": "だーすべいだー", "en": "DAASUBEIDAA"},{"ja": "とるーぱー", "en": "TORUUPAA"},
+        {"ja": "たつまき", "en": "TATUMAKI"},{"ja": "きんぐえんじん", "en": "KINGUENZIN"},
+        {"ja": "もうちがう", "en": "MOUTIGAU"},
+        {"ja": "しびれる", "en": "SIBIRERU"},{"ja": "あこがれる", "en": "AKOGARERU"},
         {"ja": "くろいせいし", "en": "KUROISEISI"}, {"ja": "あります", "en": "ARIMASU"},
         {"ja": "いやなよかん", "en": "IYANAYOKAN"},{"ja": "ふつうのぱんち", "en": "HUTUUNOPANTI"},
         {"ja": "れんぞく", "en": "RENZOKU"},{"ja": "まじなぐり", "en": "MAZINAGURI"},
@@ -145,7 +157,8 @@ ENEMY_TYPES = [
         {"ja": "がらすのはし", "en": "GARASUNOHASI"},{"ja": "ごーるど", "en": "GOORUDO"},
         {"ja": "すたーぷらちな", "en": "SUTAAPURATINA"},{"ja": "ざわーるど", "en": "ZAWAARUDO"},
         {"ja": "だーすべいだー", "en": "DAASUBEIDAA"},{"ja": "とるーぱー", "en": "TORUUPAA"},
-        {"ja": "たつまき", "en": "TATUMAKI"}, {"ja": "きんぐえんじん", "en": "KINGUENZIN"},{"ja": "もうちがう", "en": "MOUTIGAU"}
+        {"ja": "たつまき", "en": "TATUMAKI"}, {"ja": "きんぐえんじん", "en": "KINGUENZIN"},
+        {"ja": "もうちがう", "en": "MOUTIGAU"}
     ],
     [
         {"ja": "おまえは", "en": "OMAEHA"},{"ja": "ぱんのまいすう", "en": "PANNOMAISUU"},
@@ -173,6 +186,17 @@ ENEMY_TYPES = [
         {"ja": "めぐみ", "en": "MEGUMI"}, {"ja": "かなしきかこ", "en": "KANASIKIKAKO"}
     ],
     [
+        {"ja": "ひんじゃくひんじゃく", "en": "HINJAKUHINJAKU"},{"ja": "しんでいる", "en": "SINDEIRU"},
+        {"ja": "つぎのせりふは", "en": "TUGINOSERIHU"},{"ja": "さいこうにははい", "en": "SAIKOUNIHAI"},
+        {"ja": "すかいうぉーかー", "en": "SUKAIWOOKAA"},{"ja": "ちちおや", "en": "TITIOYA"},
+        {"ja": "おまえのちちおや", "en": "OMAENOTITIOYA"},{"ja": "だーくさいど", "en": "DAAKUSAIDO"},
+        {"ja": "ぎんがけい", "en": "GINGAKEI"},{"ja": "おわっちまった", "en": "OWATTIMATTA"},
+        {"ja": "つよくなりすぎてしまった", "en": "TUYOKUNARISUGITESIMATTA"},{"ja": "きょうかい", "en": "KYOUKAI"},
+        {"ja": "かいじんきょうかい", "en": "KAIZINKYOUKAI"},{"ja": "しゅじんこう", "en": "SYUZINKOU"},
+        {"ja": "げーむをさせてくれ", "en": "GEEMUWOSASETEKURE"},{"ja": "おまえはただのうまだ", "en": "OMAEHATADANOUMADA"},
+        {"ja": "うらぎり", "en": "URAGIRI"},{"ja": "スイパラいこ", "en": "SUIPARAIKO"},
+        {"ja": "けもの", "en": "KEMONO"},{"ja": "はやしれいな", "en": "HAYASIREINA"},
+        {"ja": "ささもとあきら", "en": "SASAMOTOAKIRA"},{"ja": "あまりろり", "en": "AMARIRORI"},
         {"ja": "ひんじゃくひんじゃく", "en": "HINJAKUHINJAKU"},{"ja": "しんでいる", "en": "SINDEIRU"},
         {"ja": "つぎのせりふは", "en": "TUGINOSERIHU"},{"ja": "さい最高にははい", "en": "SAIKOUNIHAI"},
         {"ja": "すかいうぉーかー", "en": "SUKAIWOOKAA"},{"ja": "ちちおや", "en": "TITIOYA"},
@@ -351,8 +375,12 @@ spawn_rate = 180
 
 combo_count = 0      
 shake_frames = 0     
-fire_bolts = []      
+fire_bolts = []       
 particles = []       
+gray_debris = []     
+
+# ★ボム用追加変数
+bomb_flash_frames = 0  # 画面を白くフラッシュさせるフレームカウンタ
 gray_debris = []    
 slow_sys = SlowSystem()
 
@@ -401,6 +429,9 @@ def create_enemy():
 running = True
 while running:
     
+    # 現在持っているボムの個数を計算（1000スコアにつき1個、最大3個ストック可能）
+    bomb_count = min(3, score // 1000)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -429,6 +460,26 @@ while running:
                     play_bgm("bgm.mp3") 
 
         elif event.type == pygame.KEYDOWN and game_state == "PLAYING":
+            
+            # ★エンターキーで敵を一掃するボム機能
+            if event.key == pygame.K_RETURN:
+                if bomb_count > 0:
+                    # スコアから1000点を消費する
+                    score -= 1000
+                    bomb_flash_frames = 8  # 画面フラッシュ時間
+                    shake_frames = 25      # 強い画面シェイク
+                    
+                    if snd_kill: snd_kill.play()
+                    
+                    # 画面内のすべての敵に爆発エフェクトを発生させて消去
+                    for e in enemies:
+                        particles.extend([Particle(e["x"], e["y"], random.choice([GRAY_INNER, GRAY_OUTER])) for _ in range(30)])
+                        gray_debris.extend([GrayDebris(e["x"], e["y"]) for _ in range(5)])
+                    
+                    enemies.clear()
+                    locked_enemy = None
+                continue
+
             if event.key == pygame.K_SPACE:
                 if slow_sys.trigger():
                     continue  
@@ -471,6 +522,13 @@ while running:
                 
         elif event.type == pygame.KEYDOWN and game_state == "GAMEOVER":
             if event.key == pygame.K_SPACE:
+                enemies.clear(); fire_bolts.clear(); particles.clear(); gray_debris.clear()
+                locked_enemy = None
+                score = 0; hp = 5; spawn_rate = 180; spawn_timer = 0; combo_count = 0
+                bomb_flash_frames = 0
+                enemies.append(create_enemy())
+                game_state = "PLAYING"
+                play_bgm("bgm.mp3")
                 game_state = "START"
                 start_typed_ok = "" 
 
@@ -582,6 +640,10 @@ while running:
 
     elif game_state == "PLAYING":
         screen.blit(font_ui.render(f"SCORE: {score}", True, UI_COLOR), (20, 20))
+    if game_state == "PLAYING":
+        # ★ボム数を絵文字（💣）でUI表示
+        bomb_icons = "💣" * bomb_count if bomb_count > 0 else "NONE"
+        screen.blit(font_ui.render(f"SCORE: {score}  (BOMB: {bomb_icons})", True, UI_COLOR), (20, 20))
         screen.blit(font_ui.render(f"LIFE: {hp} / 5", True, UI_COLOR), (20, 60))
         slow_color = (0, 255, 255) if slow_sys.is_active else UI_COLOR
         screen.blit(font_ui.render(f"SLOW [SPACE]: {slow_sys.count} / 3", True, slow_color), (20, 100))
