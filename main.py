@@ -97,12 +97,17 @@ def play_bgm(filename):
 snd_type = load_sound("type.wav")       
 snd_kill = load_sound("kill.wav")       
 snd_damage = load_sound("damage.wav")   
-snd_gameover = load_sound("gameover.wav")
 
-if snd_kill: snd_kill.set_volume(0.15)
-if snd_gameover: snd_gameover.set_volume(0.3)
-if snd_type: snd_type.set_volume(1.0)
-if snd_damage: snd_damage.set_volume(1.0)
+# ★ゲームオーバー音を新しいMP3ファイルに差し替え
+snd_gameover = load_sound("game-over-voice.mp3")
+
+# ★効果音の個別の音量を設定（0.0 が無音、1.0 が最大）
+if snd_kill: snd_kill.set_volume(0.15)        # ★敵が倒れる音をさらに小さく調整
+if snd_gameover: snd_gameover.set_volume(0.6) # ★MP3ボイスに合わせて少し音量を上げ目に調整（必要に応じて変更してください）
+if snd_type: snd_type.set_volume(1.0)         # キー入力音
+if snd_damage: snd_damage.set_volume(1.0)     # ダメージ音
+
+play_bgm("bgm.mp3")
 
 # ==========================================
 # 2. 画像と敵のデータ定義
@@ -176,7 +181,7 @@ ENEMY_TYPES = [
     [
         {"ja": "あっとうてきなぱわー", "en": "ATTOUTEKINAPAWAA"},{"ja": "しゅみでひーろー", "en": "SYUMIDEHIIROO"},
         {"ja": "まためろ", "en": "MATAMERO"},{"ja": "うでたてふせ", "en": "UDETATEHUSE"},
-        {"ja": "じょうたいおこし", "en": "JOUTAIOKOSI"},{"ja": "すくわっと", "en": "SUKUWATTO"},
+        {"ja": "じょう状態おこし", "en": "JOUTAIOKOSI"},{"ja": "すくわっと", "en": "SUKUWATTO"},
         {"ja": "らんにんぐ", "en": "RANNINGU"},{"ja": "まいにちやる", "en": "MAINITIYARU"},
         {"ja": "はげまんと", "en": "HAGEMANTO"},{"ja": "おんそくのそにっく", "en": "ONSOKUNOSONIKKU"},
         {"ja": "じごくのふぶき", "en": "ZIGOKUNOHUBUKI"},{"ja": "ぼろすかんたい", "en": "BOROSUKANTAI"},
