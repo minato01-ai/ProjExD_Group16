@@ -86,7 +86,7 @@ def play_bgm(filename):
         try:
             pygame.mixer.music.load(actual_path)
             pygame.mixer.music.play(-1)
-            pygame.mixer.music.set_volume(0.7)
+            pygame.mixer.music.set_volume(1)
         except Exception as e:
             print(f"BGM再生エラー: {e}")
 
@@ -284,7 +284,57 @@ class GrayDebris:
             alpha = max(0, min(255, int(self.duration * (255 / 45))))
             pygame.draw.rect(debris_surf, (*color, alpha), (0, 0, cs*2, cs*2))
             surface.blit(debris_surf, (int(self.x) - cs + offset_x, int(self.y) - cs + offset_y))
+class SlowSystem:
+    """
+    ゲーム内の時間を一定時間遅くする（スロー機能）を管理するクラス。
+    """
+    def __init__(self) -> None:
+        """
+        スローシステムの初期化を行う。
+        """
+        self.max_count: int = 3
+        self.count: int = self.max_count  # 残り使用回数
+        self.is_active: bool = False      # 現在スロー中かどうかのフラグ
+        self.timer: int = 0               # スローの効果時間タイマー
 
+    def trigger(self) -> bool:
+        """
+        スペースキーが押された時にスローを発動する。
+        戻り値: 発動に成功した場合はTrue、それ以外はFalse
+        """
+        if self.count > 0 and not self.is_active:
+            self.is_active = True
+            self.count -= 1
+            self.timer = 300  # 5秒間持続 (60fps × 5秒 = 300フレーム)
+            return True
+        return False
+
+    def update(self) -> None:
+        """
+        毎フレーム呼び出され、スローの残り時間を更新（カウントダウン）する。
+        """
+        if self.is_active:
+            self.timer -= 1
+            if self.timer <= 0:
+                self.is_active = False
+
+    def get_speed(self, base_speed: float) -> float:
+        """
+        スロー状態に応じて敵の速度を計算して返す。
+        引数 base_speed: 敵の本来の移動速度
+        戻り値: スロー状態なら半分の速度(0.3倍)、通常なら本来の速度
+        """
+        if self.is_active:
+            return base_speed * 0.3
+        return base_speed
+
+    def reset(self) -> None:
+        """
+        ゲームオーバーからのリスタート時に、回数や状態を初期化する。
+        """
+        self.count = self.max_count
+        self.is_active = False
+        self.timer = 0
 # ==========================================
 # 4. ゲーム変数初期化
 # ==========================================
@@ -307,7 +357,8 @@ combo_count = 0
 shake_frames = 0     
 fire_bolts = []      
 particles = []       
-gray_debris = []     
+gray_debris = []    
+slow_sys = SlowSystem()
 
 base_enemy_speed = 0.5
 speed_up_timer = 0
@@ -377,6 +428,9 @@ while running:
                     # ーーーーーーーーーーーーーーーーーーーーー
 
         elif event.type == pygame.KEYDOWN and game_state == "PLAYING":
+            if event.key == pygame.K_SPACE:
+                if slow_sys.trigger():
+                    continue  # タイピング入力（文字判定）に進まないように処理を飛ばす
             pressed_key = event.unicode.upper()
             if len(pressed_key) != 1 or not pressed_key.isalpha(): continue
             
@@ -423,7 +477,11 @@ while running:
                 start_typed_ok = "" # OKの入力状態もリセット
 
     if game_state == "PLAYING":
-        spawn_timer += 1
+        slow_sys.update()
+        if slow_sys.is_active:
+            spawn_timer += 0.3  # スロー中は敵が生まれるペースを遅くする
+        else:
+            spawn_timer += 1
         if spawn_timer >= spawn_rate:
             enemies.append(create_enemy())
             spawn_timer = 0
@@ -441,8 +499,9 @@ while running:
         gray_debris = [d for d in gray_debris if d.update()]
 
         for e in enemies[:]:
-            e["x"] += e["speed"] * math.cos(e["move_dir"])
-            e["y"] += e["speed"] * math.sin(e["move_dir"])
+            current_speed = slow_sys.get_speed(e["speed"])
+            e["x"] += current_speed * math.cos(e["move_dir"])
+            e["y"] += current_speed * math.sin(e["move_dir"])
             
             distance = math.hypot(e["x"] - CENTER_X, e["y"] - CENTER_Y)
             if distance < 25:
@@ -521,7 +580,8 @@ while running:
     elif game_state == "PLAYING":
         screen.blit(font_ui.render(f"SCORE: {score}", True, UI_COLOR), (20, 20))
         screen.blit(font_ui.render(f"LIFE: {hp} / 5", True, UI_COLOR), (20, 60))
-        
+        slow_color = (0, 255, 255) if slow_sys.is_active else UI_COLOR
+        screen.blit(font_ui.render(f"SLOW [SPACE]: {slow_sys.count} / 3", True, slow_color), (20, 100))
     elif game_state == "GAMEOVER":
         mask = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         mask.fill((10, 10, 20, 200)); screen.blit(mask, (0, 0))
